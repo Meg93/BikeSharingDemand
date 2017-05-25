@@ -124,10 +124,10 @@ def main(filename):
 
 	# model selection
 	models_rmlse = {}
-	models_rmlse["glm"] = glmPossion(features, count)
-	models_rmlse["Random Forest"] = randomForest(features, count)
-	models_rmlse["Gradient Boost"] = gradientBoost(features, count)
-	models_rmlse["XgBoost"] = xgBoost(features, count)
+	models_rmlse["glm"] = glmPossion(train_X, train_Y, val_X, val_Y)
+	models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
+	models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
+	models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
 	print "The model that gives the best performance on validation data is %s"%(sorted(x.items(), key=operator.itemgetter(1))[-1][0])
 

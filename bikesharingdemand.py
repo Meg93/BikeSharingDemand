@@ -113,7 +113,7 @@ def main(filename):
 	# load data
 	data = pd.read_csv("train.csv", header=0)
 	# feature engineer
-	featureEngineer(data)
+	data = featureEngineer(data)
 	# split data to train and validation
 	train, validation = dataSplit(data)
 	# get predictive and response variables 

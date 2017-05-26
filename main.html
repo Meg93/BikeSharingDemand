@@ -112,24 +112,21 @@ article {
  </div>
 
     <div id="content3">
-    <li>Generalized Linear Regression</li>
+    <h4>Training and Validation Dataset</h4>
+    <p>We splited the data into training (70%) and validation (30%). The training dataset was used in predictive models for hyperparameter optimization and the validation set was used to compare the performance of predictive models.</p>
+    <h4>Generalized Linear Regression</h4>
+    <p>Considering the values of response variables are positive, we tried two generalized linear models: <b>Poission Regression</b> and <b>Negative Binomial Regression</b>. The latter yielded a lower rmlse (Root Mean Squared Logarithmic Error), and gave the rmlse score of 1.16 on the validation dataset. </p>
+    <img src="pic/glm.png", style="width: 80%; height: 80%">
 	<li>Random Forest</li>
     <li>Gradient Boost</li>
 	<li>Xgboost</li>
-
 
 
 	 </p>
 
 
  </div>
-
-<!--   <div id="content">
-  	<img src="bikes.png" alt="Bike Sharing" style="width:600px;height:115px;">
-
-</div> -->
-
-
+ 
 </article>
 <script type="text/javascript">
 	function changeH1(text, id){
@@ -146,35 +143,6 @@ article {
 </script>
 
 
-
-
-<!-- <div id="answer2">2
-  <h1>Exploratory Analysis</h1>
-</div>
-
-<div id="answer3">3
-  <h1>Linear Regression</h1>
- </div>
-
-<div id="answer4">4
-  <h1>Random Forest</h1>
-
-  </div>
-
-  <div id="answer5">5
-  <h1>The Problem</h1>
-  </div>
- -->
-<!-- <script type="text/javascript">
-	$('[class^="question"]').on('click', function(e){
-    e.preventDefault();
-    var numb = this.className.replace('question', '');
-    console.log(this.className)
-    console.log(numb)
-    $('[id^="answer"]').hide();
-    $('#answer' + numb).show();
-});
-</script> -->
 <footer></footer>
 
 </div>

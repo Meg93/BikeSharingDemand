@@ -139,13 +139,18 @@ def glmPossion(train_X, train_Y, val_X, val_Y):
 	print "rmlse of validation set:", val_rmlse
 
 	# visualize prediction vs actual values
-	fig = plt.figure(figsize=(12,8))
-	ax1 =fig.add_subplot(211) 
-	plt.plot(pred)
-	plt.title("predicted hourly rental count")
-	ax2 = fig.add_subplot(212)
-	plt.plot(val_Y)
-	plt.title("actual hourly rental count")
+	fig = plt.figure(figsize=(12,10))
+	#fig.suptitle('Negative Binomial Regression', fontsize=14, fontweight='bold')
+	ax = fig.add_subplot(111)
+	# ax1.scatter(pred, val_Y - pred)
+	# ax1.set_title("Residuals Vs Fitted")
+	# ax1.set_xlabel("Fitted Values")
+	# ax1.set_ylabel('Residuals')
+	# ax2 = fig.add_subplot(212)
+	ax.scatter(pred, val_Y)
+	ax.set_title("Negative Binomial Regression")
+	ax.set_xlabel("predicted")
+	ax.set_ylabel("actual")
 	plt.show()
 	return val_rmlse
 

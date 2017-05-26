@@ -55,7 +55,7 @@ def dataSplit(data, ratio = 0.7):
     valid_target_registered: validation set target using REGISTERE
     """
     header1 = list(data.columns)
-    print header1
+    print "columns:", header1
     temp = data.values
     train_size = int(temp.shape[0] * ratio)
     train_sample_indices = random.sample(range(temp.shape[0]),
@@ -108,6 +108,45 @@ def glmPossion(train_X, train_Y, val_X, val_Y):
 	---------- 
 	par: a list of parameters that gives the best performance
 	"""
+	kf = KFold(n_splits=10)
+	train_X = sm.add_constant(train_X) 
+
+	
+	family = [sm.families.Poisson(), sm.families.NegativeBinomial()] # link functions
+
+	neg_rmlse = [] 
+	pois_rmlse = []
+
+	for train_index, test_index in kf.split(train_X):
+		# possion regression
+	    glm_pois = sm.GLM(train_Y[train_index], train_X[train_index, :], family=family[0]).fit()
+	    pred = glm_pois.predict(train_X[test_index, :]) # prediction of test set
+	    pois_rmlse.append(cal_rmlse(train_Y[test_index], pred))
+	    # negative binomial regression
+	    glm_neg = sm.GLM(train_Y[train_index], train_X[train_index, :], family=family[1]).fit()
+	    pred = glm_neg.predict(train_X[test_index, :]) # prediction of test set
+	    neg_rmlse.append(cal_rmlse(train_Y[test_index], pred))
+	print "average rmlse of possion regression:", np.mean(pois_rmlse)
+	print "average rmlse of negative binomial regression:", np.mean(neg_rmlse)
+
+	zipped = zip(family, [np.mean(pois_rmlse), np.mean(neg_rmlse)]) 
+
+
+	val_X = sm.add_constant(val_X)
+	glm = sm.GLM(val_Y, val_X, family=sorted(zipped, key=operator.itemgetter(1))[0][0]).fit() # using the family that yielded the lowest average rmlse
+	pred = glm.predict(val_X)
+	val_rmlse = cal_rmlse(val_Y, pred)
+	print "rmlse of validation set:", val_rmlse
+
+	# visualize prediction vs actual values
+	fig = plt.figure(figsize=(12,8))
+	ax1 =fig.add_subplot(211) 
+	plt.plot(pred)
+	plt.title("predicted hourly rental count")
+	ax2 = fig.add_subplot(212)
+	plt.plot(val_Y)
+	plt.title("actual hourly rental count")
+	plt.show()
 	return val_rmlse
 
 def randomForest(train_X, train_Y, val_X, val_Y):
@@ -169,28 +208,23 @@ def cal_rmlse(pred, actual):
 
 def main():
     # load data
+    print "loading data..."
     data = pd.read_csv("train.csv", header=0)
     # feature engineer
+    print "feature engineering..."
     data = featureEngineer(data, ['datetime', 'weekday', 'temp'])
     # split data to train and validation
-    train_feature, train_target_casual, train_target_registered, \
-    train_target_count, valid_feature, valid_target_casual, \
-    valid_target_count, valid_target_registered = dataSplit(data)
+    train_feature, train_target_casual, train_target_registered, train_target_count, \
+  	valid_feature, valid_target_casual, valid_target_count, valid_target_registered = dataSplit(data)
 
-    # # get predictive and response variables
-    # train_X = train.drop(["casual", "registered","count"], axis=1)
-    # train_Y = train["count"]
-    # val_X = validation.drop(["casual", "registered","count"], axis=1)
-    # val_Y = validation["count"]
-    #
     # # model selection
-    # models_rmlse = {}
-    # models_rmlse["glm"] = glmPossion(train_X, train_Y, val_X, val_Y)
+    models_rmlse = {}
+    models_rmlse["glm"] = glmPossion(train_feature, train_target_count, valid_feature, valid_target_count) 
     # models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
     # models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
     # models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
-    # print "The model that gives the best performance on validation data is %s"%(sorted(x.items(), key=operator.itemgetter(1))[-1][0])
+    print "The model that gives the best performance on validation data is %s"%(sorted(models_rmlse.items(), key=operator.itemgetter(1))[0][0])
 
 
 if __name__ == '__main__':

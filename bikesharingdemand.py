@@ -9,35 +9,93 @@ from sklearn.ensemble import RandomForestRegressor
 import operator
 
 
-def featureEngineer(data):
-	"""
-	create or drop features to make algorithmn work
-	parameter: 
-	----------
-	data: original dataframe that contains both of features and results 
-	return:
-	---------- 
-	data: dataframe that includes new features and drops redundent features
-	-------
-	"""
-	return data 
+def featureEngineer(data, feature_to_drop):
+    """
+    create or drop features to make algorithmn work
+    parameter: 
+    ----------
+    data: original dataframe that contains both of features and results 
+    feature_to_drip: list of features to drop from dataset
+    return:
+    ---------- 
+    data: dataframe that includes new features and drops redundent features
+    -------
+    """
+    dt = pd.to_datetime(data["datetime"])  # convert string to datetime type
+    data["year"] = dt.map(lambda x: x.year)
+    data["month"] = dt.map(lambda x: x.month)
+    data["day"] = dt.map(lambda x: x.day)
+    data["hour"] = dt.map(lambda x: x.hour)
+    data["weekday"] = dt.map(lambda x: x.weekday())
+    # remove outliers detected from temp vs atemp scatter plot
+    train_all = data[np.array(data["temp"] / data["atemp"]) < 2]
+    train_all = train_all.drop(feature_to_drop,
+        axis=1)  # include all features and target
+    return train_all
 
 
 def dataSplit(data, ratio = 0.7):
-	"""
-	split data into training and validation set
-	parameter: 
-	----------
-	data: dataframe that contains all observations
+    """
+    split data into training and validation set
+    parameter: 
+    ----------
+    data: dataframe that contains all observations
+    
+    return:
+    ---------- 
+    train_feature: array that contains 70% (by default) of observations. 
+    only feature included
+    train_target_count: training set target using COUNT
+    train_target_casual: training set target using CASUAL
+    train_target_registered: training set target using REGISTERE
+    valid_feature: array that contains 30% (by default) of observations. 
+    only feature included
+    valid_target_count: validation set target using COUNT
+    valid_target_casual: validation set target using CASUAL
+    valid_target_registered: validation set target using REGISTERE
+    """
+    header1 = list(data.columns)
+    print header1
+    temp = data.values
+    train_size = int(temp.shape[0] * ratio)
+    train_sample_indices = random.sample(range(temp.shape[0]),
+                                         train_size)
+    train = temp[train_sample_indices, :]
+    validation_sample_indices = [i for i in range(temp.shape[0]) if
+                                 i not in train_sample_indices]
+    validation = temp[validation_sample_indices, :]
 
-	return:
-	---------- 
-	train: dataframe that contains 70% (by default) of observations as training set
-	validation: dataframe that contains 30% of observatiosn as validation set
-			 
-	"""
+    train_target_count = temp[train_sample_indices, header1.index(
+        'count')].astype(int)  # target value for train data
+    train_target_casual = temp[train_sample_indices, header1.index(
+        'casual')].astype(int)
+    train_target_registered = temp[train_sample_indices, header1.index(
+        'registered')].astype(int)
+    # all features for model input
+    train_feature = np.delete(train, [header1.index('count'), header1.index(
+        'casual'), header1.index('registered')],axis=1)
 
-	return train, validation
+    valid_target_count = temp[validation_sample_indices, header1.index(
+        'count')].astype(int)  # target value for validation data
+    valid_target_casual = temp[validation_sample_indices, header1.index(
+        'casual')].astype(int)  # target value for validation data
+    valid_target_registered = temp[validation_sample_indices, header1.index(
+        'registered')].astype(int)  # target value for validation data
+    valid_feature = np.delete(validation, [header1.index('count'),
+                                           header1.index('casual'),
+                                           header1.index('registered')],axis=1)
+
+    print "train shape: ", np.shape(train)
+    print "train features shape: ", np.shape(train_feature)
+    print "train target shape: ", np.shape(train_target_count), np.shape(
+        train_target_registered), np.shape(train_target_casual)
+    print "validation feature shape: ", np.shape(valid_feature)
+    print "validation target shape: ", np.shape(valid_target_count), np.shape(
+        valid_target_registered), np.shape(valid_target_casual)
+    print "data preparation done."
+    return train_feature, train_target_casual, train_target_registered, \
+           train_target_count, valid_feature, valid_target_casual, \
+           valid_target_count, valid_target_registered
 
 def glmPossion(train_X, train_Y, val_X, val_Y):
 	"""
@@ -109,29 +167,32 @@ def cal_rmlse(pred, actual):
     return rmlse
 
 
-def main(filename):
-	# load data
-	data = pd.read_csv("train.csv", header=0)
-	# feature engineer
-	data = featureEngineer(data)
-	# split data to train and validation
-	train, validation = dataSplit(data)
-	# get predictive and response variables 
-	train_X = train.drop(["casual", "registered","count"], axis=1)
-	train_Y = train["count"]
-	val_X = validation.drop(["casual", "registered","count"], axis=1)
-	val_Y = validation["count"]
+def main():
+    # load data
+    data = pd.read_csv("train.csv", header=0)
+    # feature engineer
+    data = featureEngineer(data, ['datetime', 'weekday', 'temp'])
+    # split data to train and validation
+    train_feature, train_target_casual, train_target_registered, \
+    train_target_count, valid_feature, valid_target_casual, \
+    valid_target_count, valid_target_registered = dataSplit(data)
 
-	# model selection
-	models_rmlse = {}
-	models_rmlse["glm"] = glmPossion(train_X, train_Y, val_X, val_Y)
-	models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
-	models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
-	models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
+    # # get predictive and response variables
+    # train_X = train.drop(["casual", "registered","count"], axis=1)
+    # train_Y = train["count"]
+    # val_X = validation.drop(["casual", "registered","count"], axis=1)
+    # val_Y = validation["count"]
+    #
+    # # model selection
+    # models_rmlse = {}
+    # models_rmlse["glm"] = glmPossion(train_X, train_Y, val_X, val_Y)
+    # models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
+    # models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
+    # models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
-	print "The model that gives the best performance on validation data is %s"%(sorted(x.items(), key=operator.itemgetter(1))[-1][0])
+    # print "The model that gives the best performance on validation data is %s"%(sorted(x.items(), key=operator.itemgetter(1))[-1][0])
 
 
 if __name__ == '__main__':
-	main(sys.argv[0])
+    main()
 

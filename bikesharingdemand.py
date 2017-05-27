@@ -180,7 +180,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     """
     #given tuning parameters
     n_ests =[100, 150, 200, 250, 300]
-    max_depths =[10, 15, 20, 25, 30]
+    max_depths =[10, 15, 20, 25]
     learning_rates = [0.2, 0.4, 0.6, 0.8]
     alphas = [0.2, 0.4, 0.6, 0.8]
     
@@ -190,7 +190,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     learning_rate_list = []
     alpha_list = []
     mean_cv_rmlse= []
-    rmlse_scorer = metrics.make_scorer(cal_rmlse, greater_is_better=True)
+    rmlse_scorer = metrics.make_scorer(cal_rmlse)
     
     #loop parameter candidates
     for estimator in n_ests:
@@ -199,13 +199,14 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
                 for alpha in alphas:
                     model_gbr = GradientBoostingRegressor(n_estimators = estimator,
                                                           learning_rate= rate,
-                                                          max_depth = depth, alpha = alpha, 
+                                                          max_depth = depth, 
+                                                          alpha = alpha, 
                                                           random_state = 200)
                     #cross_validation
                     cv_rmlse = cross_val_score(model_gbr, train_feature, 
                                                train_target_count, 
                                                scoring = rmlse_scorer, 
-                                               cv = 2).mean()
+                                               cv = 10).mean()
                     #append paramters
                     n_est_list.append(estimator)
                     max_depth_list.append(depth)
@@ -252,7 +253,8 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     plt.legend(loc = 'lower right')
     plt.title('GBR Regression')
     plt.show()
-    return val_rmlse
+    return val_rmlse  
+
 
 
 def xgBoost(train_X, train_Y, val_X, val_Y):
@@ -269,7 +271,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	return val_rmlse
 
 
-​def cal_rmlse(pred, actual):
+def cal_rmlse(pred, actual):
     """
     evaluation of model
     parameters:
@@ -282,13 +284,13 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
     -----------
     rmlse
     """
-    #trun negative prediction to 0     
-     
-    pred_0 = np.where(pred<0, 0, pred)
-     
-    #print np.where(pred_0 ==0)[0] 
-    
-    rmlse = np.sqrt(np.mean((np.log(np.array(pred_0) + 1)- np.log(np.array(actual) + 1))**2))
+    #trun negative values to 0s     
+        
+    pred= [0 if i < 0 else i for i in pred]
+    actual = [0 if i<0 else i for i in actual]     
+   
+   
+    rmlse = np.sqrt(np.mean((np.log(np.array(pred) + 1)- np.log(np.array(actual) + 1))**2))
     return rmlse
 
 

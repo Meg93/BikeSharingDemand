@@ -179,18 +179,18 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     par: a list of parameters that gives the best performance
     """
     #given tuning parameters
-    n_ests =[200, 250, 300, 350, 400]
-    max_depths =[20, 25, 30 ]
+    n_ests =[100, 150, 200, 250, 300]
+    max_depths =[10, 15, 20, 25, 30]
     learning_rates = [0.2, 0.4, 0.6, 0.8]
-    alphas = [0.2,0.4, 0.6, 0.8]
+    alphas = [0.2, 0.4, 0.6, 0.8]
     
     #to store tuned parameters
     n_est_list = []
     max_depth_list = []
     learning_rate_list = []
     alpha_list = []
-    mean_cv_rmsle= []
-    rmsle_scorer = metrics.make_scorer(cal_rmsle, greater_is_better=True)
+    mean_cv_rmlse= []
+    rmlse_scorer = metrics.make_scorer(cal_rmlse, greater_is_better=True)
     
     #loop parameter candidates
     for estimator in n_ests:
@@ -201,35 +201,35 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
                                                           learning_rate= rate,
                                                           max_depth = depth, alpha = alpha, 
                                                           random_state = 200)
-                    #10 fold cross_validation
-                    cv_rmsle = cross_val_score(model_gbr, train_feature, 
+                    #cross_validation
+                    cv_rmlse = cross_val_score(model_gbr, train_feature, 
                                                train_target_count, 
-                                               scoring = rmsle_scorer, 
-                                               cv = 10).mean()
+                                               scoring = rmlse_scorer, 
+                                               cv = 2).mean()
                     #append paramters
                     n_est_list.append(estimator)
                     max_depth_list.append(depth)
                     learning_rate_list.append (rate)
                     alpha_list.append(alpha)
-                    mean_cv_rmsle.append(cv_rmsle)
+                    mean_cv_rmlse.append(cv_rmlse)
     
-    #dataframe parameter lists and mean_cv_rmsle            
+    #dataframe parameter lists and mean_cv_rmlse            
     tuning_result = pd.DataFrame({'n_estimators': n_est_list,
                                   'max_depth': max_depth_list,
                                   'learning_rate': learning_rate_list,
                                   'alpha': alpha_list,
-                                  'mean_cv_rmsle': mean_cv_rmsle})
+                                  'mean_cv_rmlse': mean_cv_rmlse})
                 
-    best_param = tuning_result.loc[tuning_result['mean_cv_rmsle'] == tuning_result['mean_cv_rmsle'].min()]
+    best_param = tuning_result.loc[tuning_result['mean_cv_rmlse'] == tuning_result['mean_cv_rmlse'].min()]
     
     
     
     #tuning result            
     tuning_result = pd.DataFrame({'n_estimators': n_est_list, 'max_depth': max_depth_list,
                                   'learning_rate': learning_rate_list, 'alpha': alpha_list,
-                                  'mean_cv_rmsle': mean_cv_rmsle})
+                                  'mean_cv_rmlse': mean_cv_rmlse})
     #best parameters           
-    best_param = tuning_result.loc[tuning_result['mean_cv_rmsle'] == tuning_result['mean_cv_rmsle'].min()]
+    best_param = tuning_result.loc[tuning_result['mean_cv_rmlse'] == tuning_result['mean_cv_rmlse'].min()]
     
     #best model
     model_gbr_best = GradientBoostingRegressor(n_estimators = int(best_param.iloc[0]['n_estimators']),
@@ -237,10 +237,10 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
                                                alpha = best_param.iloc[0]['alpha'],
                                                max_depth = int(best_param.iloc[0]['max_depth']),
                                                random_state = 200)
-                                               
+                                                   
     model_gbr_best.fit(train_feature, train_target_count)
-    val_rmsle = cal_rmsle(model_gbr_best.predict(val_X), val_Y)
-    print "RMSLE of validation Set: ", val_rmsle
+    val_rmlse = cal_rmlse(model_gbr_best.predict(val_X), val_Y)
+    print "RMLSE of Gradient Boosting Model: ", val_rmlse
     
     #visualization
     fig, axes = plt.subplots(figsize = (12, 6))
@@ -252,7 +252,8 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     plt.legend(loc = 'lower right')
     plt.title('GBR Regression')
     plt.show()
-    return val_rmsle
+    return val_rmlse
+
 
 def xgBoost(train_X, train_Y, val_X, val_Y):
 	"""
@@ -276,12 +277,16 @@ def cal_rmlse(pred, actual):
     pred: array or list
           prediction
     actual: array or list
-            actual target value
+        	actual target value
     return:
     -----------
     rmlse
     """
-    rmlse = np.sqrt(np.mean((np.log(np.array(np.where(pred<0, 0, pred)) + 1)- np.log(np.array(actual) + 1))**2))
+    #trun negative prediction to 0
+        
+    pred_0 = np.where(np.array(pred)<0, 0, np.array(pred))
+         
+    rmlse = np.sqrt(np.mean((np.log(np.array(pred_0) + 1)- np.log(np.array(actual) + 1))**2))
     return rmlse
 
 

@@ -168,17 +168,91 @@ def randomForest(train_X, train_Y, val_X, val_Y):
 	return val_rmlse
 
 def gradientBoost(train_X, train_Y, val_X, val_Y):
-	"""
-	running gradient boost, parameters tuning
-	parameters:
-	---------- 
-	X: ndarray, predictors
-	Y: ndarray, reponsors
-	return:
-	---------- 
-	par: a list of parameters that gives the best performance
-	"""
-	return val_rmlse
+    """
+    running gradient boost, parameters tuning
+    parameters:
+    ---------- 
+    X: ndarray, predictors
+    Y: ndarray, reponsors
+    return:
+    ---------- 
+    par: a list of parameters that gives the best performance
+    """
+    #given tuning parameters
+    n_ests =[200, 250, 300, 350, 400]
+    max_depths =[20, 25, 30 ]
+    learning_rates = [0.2, 0.4, 0.6, 0.8]
+    alphas = [0.2,0.4, 0.6, 0.8]
+    
+    #to store tuned parameters
+    n_est_list = []
+    max_depth_list = []
+    learning_rate_list = []
+    alpha_list = []
+    mean_cv_rmsle= []
+    rmsle_scorer = metrics.make_scorer(cal_rmsle, greater_is_better=True)
+    
+    #loop parameter candidates
+    for estimator in n_ests:
+        for depth in max_depths:
+            for rate in learning_rates:
+                for alpha in alphas:
+                    model_gbr = GradientBoostingRegressor(n_estimators = estimator,
+                                                          learning_rate= rate,
+                                                          max_depth = depth, alpha = alpha, 
+                                                          random_state = 200)
+                    #cross_validation
+                    cv_rmsle = cross_val_score(model_gbr, train_feature, 
+                                               train_target_count, 
+                                               scoring = rmsle_scorer, 
+                                               cv = 2).mean()
+                    #append paramters
+                    n_est_list.append(estimator)
+                    max_depth_list.append(depth)
+                    learning_rate_list.append (rate)
+                    alpha_list.append(alpha)
+                    mean_cv_rmsle.append(cv_rmsle)
+    
+    #dataframe parameter lists and mean_cv_rmsle            
+    tuning_result = pd.DataFrame({'n_estimators': n_est_list,
+                                  'max_depth': max_depth_list,
+                                  'learning_rate': learning_rate_list,
+                                  'alpha': alpha_list,
+                                  'mean_cv_rmsle': mean_cv_rmsle})
+                
+    best_param = tuning_result.loc[tuning_result['mean_cv_rmsle'] == tuning_result['mean_cv_rmsle'].min()]
+    
+    
+    
+    #tuning result            
+    tuning_result = pd.DataFrame({'n_estimators': n_est_list, 'max_depth': max_depth_list,
+                                  'learning_rate': learning_rate_list, 'alpha': alpha_list,
+                                  'mean_cv_rmsle': mean_cv_rmsle})
+    #best parameters           
+    best_param = tuning_result.loc[tuning_result['mean_cv_rmsle'] == tuning_result['mean_cv_rmsle'].min()]
+    
+    #best model
+    model_gbr_best = GradientBoostingRegressor(n_estimators = int(best_param.iloc[0]['n_estimators']),
+                                               learning_rate = best_param.iloc[0]['learning_rate'],
+                                               alpha = best_param.iloc[0]['alpha'],
+                                               max_depth = int(best_param.iloc[0]['max_depth']),
+                                               random_state = 200)
+                                               
+    model_gbr_best.fit(train_feature, train_target_count)
+    val_rmsle = cal_rmsle(model_gbr_best.predict(val_X), val_Y)
+    print "RMSLE of validation Set: ", val_rmsle
+    
+    #visualization
+    fig, axes = plt.subplots(figsize = (12, 6))
+    axes.grid(True)
+    axes.scatter(train_target_count, model_gbr_best.predict(train_feature), alpha = 0.5, color = 'red',
+                 label = 'Predicted vs Actual in Training Set')
+    axes.scatter(valid_target_count, model_gbr_best.predict(valid_feature), alpha = 0.5, color = 'blue',
+                 label = 'Predicted vs Actual in Validation Set')
+    plt.legend(loc = 'lower right')
+    plt.title('GBR Regression')
+    plt.show()
+    return val_rmsle
 
 def xgBoost(train_X, train_Y, val_X, val_Y):
 	"""
@@ -202,12 +276,12 @@ def cal_rmlse(pred, actual):
     pred: array or list
           prediction
     actual: array or list
-        	actual target value
+            actual target value
     return:
     -----------
     rmlse
     """
-    rmlse = np.sqrt(np.mean((np.log(np.array(pred) + 1)- np.log(np.array(actual) + 1))**2))
+    rmlse = np.sqrt(np.mean((np.log(np.array(np.where(pred<0, 0, pred)) + 1)- np.log(np.array(actual) + 1))**2))
     return rmlse
 
 
@@ -226,7 +300,7 @@ def main():
     models_rmlse = {}
     models_rmlse["glm"] = glmPossion(train_feature, train_target_count, valid_feature, valid_target_count) 
     # models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
-    # models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
+    models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
     # models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
     print "The model that gives the best performance on validation data is %s"%(sorted(models_rmlse.items(), key=operator.itemgetter(1))[0][0])

@@ -269,7 +269,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	return val_rmlse
 
 
-def cal_rmlse(pred, actual):
+​def cal_rmlse(pred, actual):
     """
     evaluation of model
     parameters:
@@ -282,10 +282,12 @@ def cal_rmlse(pred, actual):
     -----------
     rmlse
     """
-    #trun negative prediction to 0
-        
-    pred_0 = np.where(np.array(pred)<0, 0, np.array(pred))
-         
+    #trun negative prediction to 0     
+     
+    pred_0 = np.where(pred<0, 0, pred)
+     
+    #print np.where(pred_0 ==0)[0] 
+    
     rmlse = np.sqrt(np.mean((np.log(np.array(pred_0) + 1)- np.log(np.array(actual) + 1))**2))
     return rmlse
 

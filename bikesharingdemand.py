@@ -201,11 +201,11 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
                                                           learning_rate= rate,
                                                           max_depth = depth, alpha = alpha, 
                                                           random_state = 200)
-                    #cross_validation
+                    #10 fold cross_validation
                     cv_rmsle = cross_val_score(model_gbr, train_feature, 
                                                train_target_count, 
                                                scoring = rmsle_scorer, 
-                                               cv = 2).mean()
+                                               cv = 10).mean()
                     #append paramters
                     n_est_list.append(estimator)
                     max_depth_list.append(depth)

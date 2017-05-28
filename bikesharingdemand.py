@@ -160,16 +160,16 @@ def glmPossion(train_X, train_Y, val_X, val_Y):
 	return val_rmlse
 
 def randomForest(train_X, train_Y, val_X, val_Y):
-	"""
-	running random forest, parameters tuning
-	parameters:
-	---------- 
-	X: ndarray, predictors
-	Y: ndarray, reponsors
-	return:
-	---------- 
-	par: a list of parameters that gives the best performance
-	"""
+    """
+    running random forest, parameters tuning
+    parameters:
+    ---------- 
+    X: ndarray, predictors
+    Y: ndarray, reponsors
+    return:
+    ---------- 
+    par: a list of parameters that gives the best performance
+    """
     start_time = time.time()
     tuned_parameters = [
         {'max_depth':[50,100,200,300,400,500]}, 
@@ -197,7 +197,7 @@ def randomForest(train_X, train_Y, val_X, val_Y):
     elapsed_time = time.time() - start_time
     print elapsed_time # 1160 sec 
     return val_rmlse # around 0.35
-	return val_rmlse
+
 
 def gradientBoost(train_X, train_Y, val_X, val_Y):
     """
@@ -290,16 +290,16 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
 
 
 def xgBoost(train_X, train_Y, val_X, val_Y):
-	"""
-	running xgBoost model, parameters tuning
-	parameters:
-	---------- 
-	X: ndarray, predictors
-	Y: ndarray, reponsors
-	return:
-	---------- 
-	par: a list of parameters that gives the best performance
-	"""
+    """
+    running xgBoost model, parameters tuning
+    parameters:
+    ---------- 
+    X: ndarray, predictors
+    Y: ndarray, reponsors
+    return:
+    ---------- 
+    par: a list of parameters that gives the best performance
+    """
     start_time = time.time()
     
     train_Y = numpy.log1p(train_Y)
@@ -331,7 +331,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
     elapsed_time = time.time() - start_time
     print elapsed_time # 200 sec
     
-	return val_rmlse # 0.30
+    return val_rmlse # 0.30
 
 
 def cal_rmlse(pred, actual):

@@ -7,6 +7,11 @@ import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 import operator
+from math import log
+from sklearn.grid_search import GridSearchCV
+import time
+import xgboost as xgb
+from xgboost.sklearn import XGBRegressor
 
 
 def featureEngineer(data, feature_to_drop):
@@ -165,6 +170,33 @@ def randomForest(train_X, train_Y, val_X, val_Y):
 	---------- 
 	par: a list of parameters that gives the best performance
 	"""
+    start_time = time.time()
+    tuned_parameters = [
+        {'max_depth':[50,100,200,300,400,500]}, 
+        {'n_estimators':[10, 50, 100, 200, 300,400,500,600,700,800,900,1000]}, 
+        {'min_samples_leaf':[1,2,5,10,50,100]}, #1
+        {'min_samples_split':[2,5,10,50,100]}, #2
+        {'min_weight_fraction_leaf':[0.0, 0.1, 0.3, 0.4, 0.5]}]   
+    
+    model_rf = GridSearchCV(RandomForestRegressor(random_state = 99), tuned_parameters, cv=10,
+                       scoring='r2')
+    model_rf.fit(train_X, train_Y)
+    print "Best parameters set :"  
+    print model_rf.best_estimator_ 
+
+    pred_rf = model_rf.predict(val_X)
+    val_rmlse = cal_rmlse(val_Y, pred_rf)
+    #Visualiztion
+    fig, axes = plt.subplots(figsize = (6, 6))
+    axes.scatter(valid_target_count,pred_rf , alpha = 0.5,
+                label = 'Predicted vs Actual in Validation Set')
+    plt.legend(loc = 'lower right')
+    plt.title('Random Forest Regression')
+    plt.show()
+    
+    elapsed_time = time.time() - start_time
+    print elapsed_time # 1160 sec 
+    return val_rmlse # around 0.35
 	return val_rmlse
 
 def gradientBoost(train_X, train_Y, val_X, val_Y):
@@ -268,7 +300,38 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	---------- 
 	par: a list of parameters that gives the best performance
 	"""
-	return val_rmlse
+    start_time = time.time()
+    
+    train_Y = numpy.log1p(train_Y)
+    
+    tuned_parameters = [
+    {'max_depth': [2,5,10,100,1000]}, 
+    {'n_estimators': [50,100,500,1000,5000]}, 
+    {'learning_rate': [0.15, 0.18, 0.2, 0.29, 0.3]}]  
+    
+    model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10,
+                       scoring='r2')
+    model_xg.fit(train_X,train_Y)
+
+    print "Best parameters set:"  
+    print model_xg.best_estimator_
+    # Predict 
+    pred_xg = model_xg.predict(val_X)
+    pred_xg = np.expm1(pred_xg)
+    val_rmlse = cal_rmlse(val_Y, pred_xg)
+    
+    # Visualization
+    fig, axes = plt.subplots(figsize = (6, 6))
+    axes.scatter(valid_target_count,pred_xg , alpha = 0.5,
+                label = 'Predicted vs Actual in Validation Set')
+    plt.legend(loc = 'lower right')
+    plt.title('Xgboost Regression')
+    plt.show()
+    
+    elapsed_time = time.time() - start_time
+    print elapsed_time # 200 sec
+    
+	return val_rmlse # 0.30
 
 
 def cal_rmlse(pred, actual):
@@ -308,9 +371,9 @@ def main():
     # # model selection
     models_rmlse = {}
     models_rmlse["glm"] = glmPossion(train_feature, train_target_count, valid_feature, valid_target_count) 
-    # models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
+    models_rmlse["Random Forest"] = randomForest(train_X, train_Y, val_X, val_Y)
     models_rmlse["Gradient Boost"] = gradientBoost(train_X, train_Y, val_X, val_Y)
-    # models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
+    models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
     print "The model that gives the best performance on validation data is %s"%(sorted(models_rmlse.items(), key=operator.itemgetter(1))[0][0])
 

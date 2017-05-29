@@ -211,10 +211,10 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     par: a list of parameters that gives the best performance
     """
     #given tuning parameters
-    n_ests =[100, 150, 200, 250, 300]
-    max_depths =[10, 15, 20, 25]
-    learning_rates = [0.2, 0.4, 0.6, 0.8]
-    alphas = [0.2, 0.4, 0.6, 0.8]
+    n_ests =[200, 250, 300]
+    max_depths =[15, 20, 25]
+    learning_rates = [0.2, 0.6]
+    alphas = [0.6, 0.8]
     
     #to store tuned parameters
     n_est_list = []
@@ -264,6 +264,8 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     #best parameters           
     best_param = tuning_result.loc[tuning_result['mean_cv_rmlse'] == tuning_result['mean_cv_rmlse'].min()]
     
+    print best_param
+    
     #best model
     model_gbr_best = GradientBoostingRegressor(n_estimators = int(best_param.iloc[0]['n_estimators']),
                                                learning_rate = best_param.iloc[0]['learning_rate'],
@@ -276,7 +278,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     print "RMLSE of Gradient Boosting Model: ", val_rmlse
     
     #visualization
-    fig, axes = plt.subplots(figsize = (12, 6))
+    fig, axes = plt.subplots(figsize = (12, 12))
     axes.grid(True)
     axes.scatter(train_target_count, model_gbr_best.predict(train_feature), alpha = 0.5, color = 'red',
                  label = 'Predicted vs Actual in Training Set')
@@ -286,6 +288,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
     plt.title('GBR Regression')
     plt.show()
     return val_rmlse  
+
 
 
 

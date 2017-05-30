@@ -6,46 +6,46 @@
 
 
 div.container {
-    width: 1000px;
-    border: 1px solid gray;
-    margin: auto;
+	width: 1000px;
+	border: 1px solid gray;
+	margin: auto;
 }
 
 header, footer {
 	max-width: 1000px;
-    padding: 1em;
-    color: white;
-    background-color: black;
-    clear: left;
-    text-align: center;
+	padding: 1em;
+	color: white;
+	background-color: black;
+	clear: left;
+	text-align: center;
 }
 
 nav {
-    float: left;
-    max-width: 160px;
-    margin: 0;
-    padding: 1em;
+	float: left;
+	max-width: 160px;
+	margin: 0;
+	padding: 1em;
 }
 
 nav ul {
-    list-style-type: none;
-    padding: 0;
+	list-style-type: none;
+	padding: 0;
 }
    
 nav ul a {
-    text-decoration: none;
+	text-decoration: none;
 }
 
 article {
 
-    margin-left: 170px;
-    border-left: 1px solid gray;
-    padding: 1em;
-    overflow: hidden;
+	margin-left: 170px;
+	border-left: 1px solid gray;
+	padding: 1em;
+	overflow: hidden;
 
 }
 
-#content2, #content3 {display: none;}
+#content2, #content3, #content4 {display: none;}
 </style>
 </head>
 <body>
@@ -58,9 +58,10 @@ article {
   
 <nav>
   <ul>
-    <li><a href="#" onclick="changeH1('The Problem', 'title'), changeContent('content1')">The Problem</a></li>
-    <li><a href="#" onclick="changeH1('Exploratory Analysis', 'title'), changeContent('content2')">Exploratory Analysis</a></li>
-    <li><a href="#" onclick="changeH1('Predictive Models', 'title'), changeContent('content3')">Predictive Models</a></li>
+	<li><a href="#" onclick="changeH1('The Problem', 'title'), changeContent('content1')">The Problem</a></li>
+	<li><a href="#" onclick="changeH1('Exploratory Analysis', 'title'), changeContent('content2')">Exploratory Analysis</a></li>
+	<li><a href="#" onclick="changeH1('Pipeline', 'title'), changeContent('content3')">Pipeline</a></li>
+	<li><a href="#" onclick="changeH1('Predictive Models', 'title'), changeContent('content4')">Predictive Models</a></li>
   </ul>
 </nav>
 
@@ -91,34 +92,51 @@ article {
 
    <div id="content2">
 	 <p>In the exploratory analysis, we asked following questions:
-	 	<li> How is the count of bike rental associated with the day of the week? </li>
-	 		<img src="pic/dayofweek.png", alt="Bike Demand in Day of Week"><br>
-	 	<p>  An interesting pattern was displayed that for the weekday 0 to 4, which represent Monday to Friday, the peaks of bike rental occurred at 8 and 17 o’clock, while for the weekday 5 and 6, which represent the weekend, the peaks of bike rental occurred at the noon. </p>
+		<li> How is the count of bike rental associated with the day of the week? </li>
+			<img src="pic/dayofweek.png", alt="Bike Demand in Day of Week"><br>
+		<p>  An interesting pattern was displayed that for the weekday 0 to 4, which represent Monday to Friday, the peaks of bike rental occurred at 8 and 17 o’clock, while for the weekday 5 and 6, which represent the weekend, the peaks of bike rental occurred at the noon. </p>
 
-	 	<br><li> How the hourly count of bike rental changes in different seasons? </li>
-	 		<img src="pic/season.png", alt="Bike Demand in seasons"><br>
-	 	<p> The pattern of hourly bike rental is consistent throughout the seasons, but obviously in spring, the total count is lowered than the other seasons</p>
-	 	
-	 	<br><li> How is the bike demand impacted by holiday, weekends and weekdays?</li>
-	 		<img src="pic/holiday.png", alt="Bike Demand in holiday, weekends and weekdays"> <br>
-	 	<p>Although the average count of bike rental is pretty closed among holiday, weekends and weekdays, but there are more outliers in weekdays.</p>
+		<br><li> How the hourly count of bike rental changes in different seasons? </li>
+			<img src="pic/season.png", alt="Bike Demand in seasons"><br>
+		<p> The pattern of hourly bike rental is consistent throughout the seasons, but obviously in spring, the total count is lowered than the other seasons</p>
+		
+		<br><li> How is the bike demand impacted by holiday, weekends and weekdays?</li>
+			<img src="pic/holiday.png", alt="Bike Demand in holiday, weekends and weekdays"> <br>
+		<p>Although the average count of bike rental is pretty closed among holiday, weekends and weekdays, but there are more outliers in weekdays.</p>
 
-	 	<br><li>Do registered users rented bike more often than casual (non-registered) users</li>
-	 		<img src="pic/users.png", alt="casual and registered users">
-	 	<p> Registered users maintained a higher count of rental bike, especially in the peak hours (8 and 17 o'clock). However, casual users displayed a different pattern in that not only did they rent much less in total, but also they usually rented bikes between 12 to16.</p>
+		<br><li>Do registered users rented bike more often than casual (non-registered) users</li>
+			<img src="pic/users.png", alt="casual and registered users">
+		<p> Registered users maintained a higher count of rental bike, especially in the peak hours (8 and 17 o'clock). However, casual users displayed a different pattern in that not only did they rent much less in total, but also they usually rented bikes between 12 to16.</p>
 	 </p>
 
 
  </div>
 
-    <div id="content3">
-    <h4>Training and Validation Dataset</h4>
-    <p>We splited the data into training (70%) and validation (30%). The training dataset was used in predictive models for hyperparameter optimization and the validation set was used to compare the performance of predictive models.</p>
-    <h4>Generalized Linear Regression</h4>
-    <p>Considering the values of response variables are positive, we tried two generalized linear models: <b>Poission Regression</b> and <b>Negative Binomial Regression</b>. The latter yielded a lower rmlse (Root Mean Squared Logarithmic Error), and gave the rmlse score of 1.16 on the validation dataset. </p>
-    <img src="pic/glm.png", style="width: 80%; height: 80%">
+<div id="content3">
+	<p>After doing the exploratory analysis, we took following steps to tackle down the problem:</p>
+	<ol>
+	<li>Feature Engineering. We created new features based on the datetime column and dropped highly correlated features.</li>
+	<br>
+	<li>Data Split. The data was splitted into training set (70%) and validation set (30%).</li>
+	<br>
+	<li>Model Selections. We opted for four predictive models. For each model we used the training set to tune the parameters to achieve the lowest rmlse (Root Mean Squared Logarithmic Error). The performance of the four models was then compared with the validation set.</li>
+	<br>
+	<li>Prediction. With the model that yielded the greatest performance with the validation set, we predicted the hourly bike rental count in the test data.</li>
+	</ol>
+
+
+</div>
+
+	<div id="content4">
+	<h4>Generalized Linear Regression</h4>
+	<p>Considering the values of response variables are positive, we tried two generalized linear models: Poission Regression and Negative Binomial Regression. The latter yielded a lower rmlse, and gave the rmlse score of 1.16 on the validation dataset. </p>
+	<img src="pic/glm.png">
 	<li>Random Forest</li>
-    <li>Gradient Boost</li>
+	<p>The model selection on Random Forest was based on five parameters including the number of trees. The optimized Random Forest gave us a rmlse around 0.35.</p>
+	<img src="pic/RandomForest.png">
+	<li>Gradient Boost</li>
+	<p>As a strong competitor of Random Forest, Gradient Boost is another method of choice. In this problem, gradient boosted trees gave us the rmlse score of 0.4125,  a result closed to the Random Forest</p>
+	<img src="pic/ResiedGBRViz.PNG">
 	<li>Xgboost</li>
 
 
@@ -126,7 +144,7 @@ article {
 
 
  </div>
- 
+
 </article>
 <script type="text/javascript">
 	function changeH1(text, id){

@@ -6,14 +6,13 @@ import random
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-# from sklearn.ensemble import GradientBoostingRegressor
 import operator
 from math import log
 from sklearn.grid_search import GridSearchCV
 import time
 from sklearn import metrics
 from sklearn.model_selection import cross_val_score 
-import warnings
+
 
 #import xgboost as xgb
 #from xgboost.sklearn import XGBRegressor
@@ -291,7 +290,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
 	plt.legend(loc = 'lower right')
 	plt.title('GBR Regression')
 	plt.show()
-	return val_rmlse， model_gbr_best
+	return val_rmlse, model_gbr_best
 
 
 def xgBoost(train_X, train_Y, val_X, val_Y):
@@ -363,7 +362,6 @@ def cal_rmlse(pred, actual):
 
 
 def main():
-	warnings.filterwarnings("ignore", category=DeprecationWarning) 
 	t0 = time.time()
 	data = pd.read_csv("train.csv", header=0)
 
@@ -385,7 +383,8 @@ def main():
 	# #models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
 
 	t1 = time.time()
-	print "The model that gives the best performance on validation data is %s"%(sorted(models_rmlse.items(), key=operator.itemgetter(1))[0][0])
+	# print "The model that gives the best performance on validation data is %s"%(sorted(models.items()[0], key=operator.itemgetter(1))[0][0])
+	print models
 	print "Time: %.2f seconds"%(t1-t0) 
 
 

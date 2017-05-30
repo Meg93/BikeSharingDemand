@@ -8,14 +8,12 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 import operator
 from math import log
-from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 import time
 from sklearn import metrics
-from sklearn.model_selection import cross_val_score 
-
-
-#import xgboost as xgb
-#from xgboost.sklearn import XGBRegressor
+from sklearn.model_selection import cross_val_score
+# import xgboost as xgb
+from xgboost.sklearn import XGBRegressor
 
 
 def featureEngineer(data, feature_to_drop):
@@ -306,16 +304,22 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	"""
 	start_time = time.time()
 	
-	train_Y = numpy.log1p(train_Y)
+	train_Y_log = np.log1p(train_Y)
 	
 	tuned_parameters = [
-	{'max_depth': [2,5,10,100,1000]}, 
-	{'n_estimators': [50,100,500,1000,5000]}, 
-	{'learning_rate': [0.15, 0.18, 0.2, 0.29, 0.3]}]  
-	
+	{'max_depth': [2,5,10,100,1000]},
+	{'n_estimators': [50,100,500,1000,5000]},
+	{'learning_rate': [0.15, 0.18, 0.2, 0.29, 0.3]}]
+		# [
+		# {'max_depth': [2]},
+		# {'n_estimators': [50]},
+		# {'learning_rate': [0.2]}]
+
+
+
 	model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10,
 					   scoring='r2')
-	model_xg.fit(train_X,train_Y)
+	model_xg.fit(train_X,train_Y_log)
 
 	print "Best parameters set:"  
 	print model_xg.best_estimator_
@@ -323,18 +327,26 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	pred_xg = model_xg.predict(val_X)
 	pred_xg = np.expm1(pred_xg)
 	val_rmlse = cal_rmlse(val_Y, pred_xg)
-	
-	# Visualization
-	fig, axes = plt.subplots(figsize = (6, 6))
-	axes.scatter(valid_target_count,pred_xg , alpha = 0.5,
-				label = 'Predicted vs Actual in Validation Set')
-	plt.legend(loc = 'lower right')
-	plt.title('Xgboost Regression')
+
+	pred_xg_train = model_xg.predict(train_X)
+	pred_xg_train = np.expm1(pred_xg_train)
+	val_rmlse_train = cal_rmlse(train_Y, pred_xg_train)
+
+
+	# visualiztion
+	fig, axes = plt.subplots(figsize=(6, 4))
+	axes.grid(True)
+	axes.scatter(pred_xg, val_Y, alpha=0.5, color='blue',
+				 label='Predicted vs Actual in Validation Set')
+	axes.scatter(pred_xg_train, train_Y, alpha=0.5,
+				 color='red', label='Predicted vs Actual in Training Set')
+	plt.legend(loc='lower right')
+	plt.title('XGBoost Regression')
 	plt.show()
-	
 	elapsed_time = time.time() - start_time
+
 	print elapsed_time # 200 sec
-	
+	print val_rmlse_train
 	return val_rmlse # 0.30
 
 
@@ -370,6 +382,7 @@ def main():
 
 	# model selection
 	models = {}
+
 	rmlse, model = glm(train_feature, train_target_count, valid_feature, valid_target_count)
 	models[model] = rmlse
 	rmlse, model = randomForest(train_feature, train_target_count, valid_feature, valid_target_count)

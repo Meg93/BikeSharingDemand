@@ -145,7 +145,7 @@ def glm(train_X, train_Y, val_X, val_Y):
 	glm = sm.GLM(val_Y, val_X, family=sorted(zipped, key=operator.itemgetter(1))[0][0]).fit() # using the family that yielded the lowest average rmlse
 	pred = glm.predict(val_X)
 	val_rmlse = cal_rmlse(val_Y, pred)
-	print "rmlse of validation set:", val_rmlse
+	print "GLM, rmlse of validation set:", val_rmlse
 
 	# visualize prediction vs actual values
 	fig, axes = plt.subplots(figsize=(6,4))
@@ -199,9 +199,9 @@ def randomForest(train_X, train_Y, val_X, val_Y):
 	plt.title('Random Forest Regression')
 	plt.show()
 	
-	elapsed_time = time.time() - start_time
-	print elapsed_time # 1160 sec 
-	return val_rmlse, pred_rf # around 0.35
+	elapsed_time = time.time() - start_time # 1160 sec 
+	print "Random Forest, rmlse of validation set:", val_rmlse
+	return val_rmlse, model_rf # around 0.35
 
 
 def gradientBoost(train_X, train_Y, val_X, val_Y):
@@ -269,7 +269,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
 	#best parameters           
 	best_param = tuning_result.loc[tuning_result['mean_cv_rmlse'] == tuning_result['mean_cv_rmlse'].min()]
 	
-	print best_param
+	# print best_param
 	
 	#best model
 	model_gbr_best = GradientBoostingRegressor(n_estimators = int(best_param.iloc[0]['n_estimators']),
@@ -280,7 +280,7 @@ def gradientBoost(train_X, train_Y, val_X, val_Y):
 												   
 	model_gbr_best.fit(train_X, train_Y)
 	val_rmlse = cal_rmlse(model_gbr_best.predict(val_X), val_Y)
-	print "RMLSE of Gradient Boosting Model: ", val_rmlse
+	print "Gradient Boost, rmlse of validation set:", val_rmlse
 	
 	#visualization
 	fig, axes = plt.subplots(figsize = (6, 4))
@@ -360,32 +360,31 @@ def cal_rmlse(pred, actual):
 	rmlse = np.sqrt(np.mean((np.log(np.array(pred) + 1)- np.log(np.array(actual) + 1))**2))
 	return rmlse
 
-
 def main():
 	t0 = time.time()
-	data = pd.read_csv("train.csv", header=0)
+	train = pd.read_csv("train.csv", header=0)
 
 	# feature engineering
-	data = featureEngineer(data, ['datetime', 'weekday', 'temp'])
-	train_feature, train_target_casual, train_target_registered, train_target_count, valid_feature, valid_target_casual, valid_target_count, valid_target_registered = dataSplit(data)
+	train = featureEngineer(train, ['datetime', 'weekday', 'temp'])
+	train_feature, train_target_casual, train_target_registered, train_target_count, valid_feature, valid_target_casual, valid_target_count, valid_target_registered = dataSplit(train)
 
-	# # model selection
+	# model selection
 	models = {}
-
-	models["glm"] = [glm(train_feature, train_target_count, valid_feature, valid_target_count)]
-	
-	
-	# rmlse, model = randomForest(train_feature, train_target_count, valid_feature, valid_target_count)
-	# models.append(model)
-	# models_rmlse.append(models_rmlse)
-
-	# models_rmlse["Gradient Boost"] = gradientBoost(train_feature, train_target_count, valid_feature, valid_target_count)
-	# #models_rmlse["XgBoost"] = xgBoost(train_X, train_Y, val_X, val_Y)
+	rmlse, model = glm(train_feature, train_target_count, valid_feature, valid_target_count)
+	models[model] = rmlse
+	rmlse, model = randomForest(train_feature, train_target_count, valid_feature, valid_target_count)
+	models[model] = rmlse
+	rmlse, model = gradientBoost(train_feature, train_target_count, valid_feature, valid_target_count)
+	models[model] = rmlse
+	# rmlse, model - xgBoost(train_feature, train_target_count, valid_feature, valid_target_count)
+	# models[model] = rmlse
 
 	t1 = time.time()
-	# print "The model that gives the best performance on validation data is %s"%(sorted(models.items()[0], key=operator.itemgetter(1))[0][0])
+	print "Result:"
 	print models
+	print "The model that gives the best performance on validation data is %s"%(sorted(models.items(), key=operator.itemgetter(1))[0][0])
 	print "Time: %.2f seconds"%(t1-t0) 
+
 
 
 if __name__ == '__main__':

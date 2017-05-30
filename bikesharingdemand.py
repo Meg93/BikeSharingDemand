@@ -304,7 +304,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	"""
 	start_time = time.time()
 	
-	train_Y = np.log1p(train_Y)
+	train_Y_log = np.log1p(train_Y)
 	
 	tuned_parameters = [
 	{'max_depth': [2,5,10,100,1000]},
@@ -319,7 +319,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 
 	model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10,
 					   scoring='r2')
-	model_xg.fit(train_X,train_Y)
+	model_xg.fit(train_X,train_Y_log)
 
 	print "Best parameters set:"  
 	print model_xg.best_estimator_

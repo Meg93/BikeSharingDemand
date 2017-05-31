@@ -14,8 +14,8 @@ from sklearn import metrics
 from sklearn.model_selection import cross_val_score 
 
 
-#import xgboost as xgb
-#from xgboost.sklearn import XGBRegressor
+import xgboost as xgb
+from xgboost.sklearn import XGBRegressor
 
 
 def featureEngineer(data, feature_to_drop):
@@ -316,8 +316,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	{'n_estimators': [50,100,500,1000,5000]}, 
 	{'learning_rate': [0.15, 0.18, 0.2, 0.29, 0.3]}]  
 	
-	model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10,
-					   scoring='r2')
+	model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10, scoring='r2')
 	model_xg.fit(train_X,train_Y)
 
 	print "Best parameters set:"  
@@ -329,8 +328,9 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	
 	# Visualization
 	fig, axes = plt.subplots(figsize = (6, 6))
-	axes.scatter(valid_target_count,pred_xg , alpha = 0.5,
-				label = 'Predicted vs Actual in Validation Set')
+	axes.grid(True)
+	axes.scatter(pred_xg, val_Y, alpha = 0.5, label = 'Predicted vs Actual in Validation Set')
+	axes.scatter(pred_xg, val_Y, alpha = 0.5, label = 'Predicted vs Actual in Validation Set')
 	plt.legend(loc = 'lower right')
 	plt.title('Xgboost Regression')
 	plt.show()

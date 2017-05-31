@@ -309,7 +309,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	"""
 	start_time = time.time()
 	
-	train_Y = numpy.log1p(train_Y)
+	train_Y_log = np.log1p(train_Y)
 	
 	tuned_parameters = [
 	{'max_depth': [2,5,10,100,1000]}, 
@@ -318,7 +318,7 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	
 	model_xg = GridSearchCV(XGBRegressor(), tuned_parameters, cv=10,
 					   scoring='r2')
-	model_xg.fit(train_X,train_Y)
+	model_xg.fit(train_X,train_Y_log)
 
 	print "Best parameters set:"  
 	print model_xg.best_estimator_
@@ -326,11 +326,19 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	pred_xg = model_xg.predict(val_X)
 	pred_xg = np.expm1(pred_xg)
 	val_rmlse = cal_rmlse(val_Y, pred_xg)
+
+	pred_xg_train = model_xg.predict(train_X)
+ 	pred_xg_train = np.expm1(pred_xg_train)
+ 	val_rmlse_train = cal_rmlse(train_Y, pred_xg_train)
+ 
 	
 	# Visualization
 	fig, axes = plt.subplots(figsize = (6, 6))
-	axes.scatter(valid_target_count,pred_xg , alpha = 0.5,
+	axes.grid(True)
+	axes.scatter(valid_target_count,pred_xg , alpha = 0.5,color='blue',
 				label = 'Predicted vs Actual in Validation Set')
+	axes.scatter(pred_xg_train, train_Y, alpha=0.5,
+ 				color='red', label='Predicted vs Actual in Training Set')
 	plt.legend(loc = 'lower right')
 	plt.title('Xgboost Regression')
 	plt.show()
@@ -339,7 +347,6 @@ def xgBoost(train_X, train_Y, val_X, val_Y):
 	print elapsed_time # 200 sec
 	
 	return val_rmlse # 0.30
-
 
 def cal_rmlse(pred, actual):
 	"""
@@ -402,8 +409,8 @@ def main():
 	models[model] = rmlse
 	rmlse, model = gradientBoost(train_feature, train_target_count, valid_feature, valid_target_count)
 	models[model] = rmlse
-	# rmlse, model = xgBoost(train_feature, train_target_count, valid_feature, valid_target_count)
-	# models[model] = rmlse
+	rmlse, model = xgBoost(train_feature, train_target_count, valid_feature, valid_target_count)
+	models[model] = rmlse
 
 	# predict test data
 	#prediction(pd.read_csv("train.csv", header=0), pd.read_csv("test.csv", header=0), sorted(models.items(), key=operator.itemgetter(1))[0][0])
